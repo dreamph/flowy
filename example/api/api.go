@@ -1,24 +1,7 @@
-## _Flowy (Smooth API flow)_
-
-## Benchmark
-
-```shell
-cpu: Apple M4 Pro
-BenchmarkFlowy-12       	  300319	      3989 ns/op
-BenchmarkStandard-12    	  308863	      3747 ns/op
-```
-
-## Basic Usage
-Full Example [example](example)
-
-```go
-package main
+package api
 
 import (
-	"fmt"
 	"github.com/dreamph/flowy"
-	"github.com/dreamph/flowy/example/fiberx"
-	"github.com/gofiber/fiber/v2"
 	errs "github.com/pkg/errors"
 	"io"
 	"log"
@@ -167,83 +150,3 @@ type UploadRequest struct {
 type SimpleRequest struct {
 	Name string `json:"name"`
 }
-
-func main() {
-	apiHandler := NewNewApiHandler()
-	app := fiber.New()
-	app.Get("/", func(c *fiber.Ctx) error {
-		return apiHandler.Do(fiberx.WebCtx(c), nil, nil, func(ctx *flowy.Ctx[RequestInfo]) (interface{}, error) {
-			return "Hi.", nil
-		})
-	})
-
-	app.Get("/custom-status", func(c *fiber.Ctx) error {
-		requestOptions := flowy.WithRequestOptions(
-			SuccessStatus(201),
-		)
-		return apiHandler.Do(fiberx.WebCtx(c), nil, requestOptions, func(ctx *flowy.Ctx[RequestInfo]) (interface{}, error) {
-			return "Hi.", nil
-		})
-	})
-
-	app.Get("/error", func(c *fiber.Ctx) error {
-		return apiHandler.Do(fiberx.WebCtx(c), nil, nil, func(ctx *flowy.Ctx[RequestInfo]) (interface{}, error) {
-			return nil, &AppError{ErrCode: "0001", ErrMessage: "Error"}
-		})
-	})
-
-	app.Post("/simple", func(c *fiber.Ctx) error {
-		request := &SimpleRequest{}
-		return apiHandler.Do(fiberx.WebCtx(c), request, nil, func(ctx *flowy.Ctx[RequestInfo]) (interface{}, error) {
-			fmt.Println(request.Name)
-			return request.Name, nil
-		})
-	})
-
-	app.Post("/upload", func(c *fiber.Ctx) error {
-		request := &UploadRequest{}
-		requestOptions := flowy.WithRequestOptions(
-			EnableValidate(true),
-		)
-		return apiHandler.Do(fiberx.WebCtx(c), request, requestOptions, func(ctx *flowy.Ctx[RequestInfo]) (interface{}, error) {
-			fmt.Println("name:", request.Name)
-			fmt.Println("file1:", request.File1.Filename)
-			fmt.Println("file2:", request.File2.Filename)
-			return "Success", nil
-		})
-	})
-
-	err := app.Listen(":3000")
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-
-```
-
-## Test
-
-```shell
-curl -v http://localhost:3000/
-```
-
-```shell
-curl -v http://localhost:3000/custom-status
-```
-
-```shell
-curl -v http://localhost:3000/error
-```
-
-```shell
-curl -v -X POST -d '{"name": "Hello"}' http://localhost:3000/simple -H 'Content-Type: application/json'
-```
-
-```shell
-curl -v -F name=cenery -F file1=@api.go -F file2=@utils.go http://localhost:3000/upload
-```
-
-Buy Me a Coffee
-=======
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/dreamph)
