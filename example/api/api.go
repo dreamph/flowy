@@ -6,11 +6,19 @@ import (
 	"io"
 	"log"
 	"mime/multipart"
+	"net/http"
 	"time"
 )
 
+type UserRequestInfo struct {
+	Id   string `json:"id"`
+	Role string `json:"role"`
+	IP   string `json:"ip"`
+}
+
 type RequestInfo struct {
-	Token string `json:"token"`
+	UserRequestInfo *UserRequestInfo `json:"-"`
+	Token           string           `json:"-"`
 }
 
 type RequestOption struct {
@@ -69,7 +77,7 @@ func (e *AppError) Error() string {
 }
 
 func NewApiResponseHandler() flowy.ApiResponseHandler[flowy.WebCtx, RequestOption] {
-	apiResponseHandler := flowy.NewApiResponseHandler[flowy.WebCtx, RequestOption](&flowy.ApiResponseHandlerOptions[flowy.WebCtx, RequestOption]{
+	return flowy.NewApiResponseHandler[flowy.WebCtx, RequestOption](&flowy.ApiResponseHandlerOptions[flowy.WebCtx, RequestOption]{
 		ResponseSuccess: func(c flowy.WebCtx, requestOption *RequestOption, data any) error {
 			if requestOption.SuccessStatus > 0 {
 				c.Status(requestOption.SuccessStatus)
@@ -88,7 +96,7 @@ func NewApiResponseHandler() flowy.ApiResponseHandler[flowy.WebCtx, RequestOptio
 		ResponseError: func(c flowy.WebCtx, requestOption *RequestOption, err error) error {
 			res := &ErrorResponse{
 				Status:     false,
-				StatusCode: 500,
+				StatusCode: http.StatusInternalServerError,
 				Code:       "E00001",
 				Message:    err.Error(),
 			}
@@ -98,19 +106,22 @@ func NewApiResponseHandler() flowy.ApiResponseHandler[flowy.WebCtx, RequestOptio
 			if ok {
 				res.Code = appError.ErrCode
 				res.Message = appError.ErrMessage
-				res.StatusCode = 400
+				res.StatusCode = http.StatusBadRequest
 			}
 			c.Status(res.StatusCode)
 			return c.JSON(res)
 		},
 	})
-	return apiResponseHandler
 }
 
-func NewNewApiHandler() flowy.ApiHandler[flowy.WebCtx, RequestInfo, RequestOption] {
+func NewApiHandler() flowy.ApiHandler[flowy.WebCtx, RequestInfo, RequestOption] {
 	requestValidator := flowy.NewRequestValidator()
 	responseHandler := NewApiResponseHandler()
 	return flowy.NewApiHandler[flowy.WebCtx, RequestInfo, RequestOption](responseHandler, &flowy.ApiHandlerOptions[flowy.WebCtx, RequestInfo, RequestOption]{
+		OnBefore: func(c flowy.WebCtx, requestOption *RequestOption) error {
+			log.Println("OnBefore")
+			return nil
+		},
 		OnValidate: func(c flowy.WebCtx, requestOption *RequestOption, data any) error {
 			if requestOption.EnableValidate {
 				err := requestValidator.Validate(data)
@@ -121,32 +132,32 @@ func NewNewApiHandler() flowy.ApiHandler[flowy.WebCtx, RequestInfo, RequestOptio
 			}
 			return nil
 		},
-		OnBefore: func(c flowy.WebCtx, requestOption *RequestOption) error {
-			log.Println("OnBefore")
-			if requestOption.EnableValidate {
-				log.Println("EnableValidate")
-			}
+		OnAfter: func(c flowy.WebCtx, requestOption *RequestOption) error {
+			log.Println("OnAfter")
 			return nil
 		},
 		GetRequestInfo: func(c flowy.WebCtx, requestOption *RequestOption) (*RequestInfo, error) {
 			log.Println("GetRequestInfo")
 			return &RequestInfo{
-				Token: "my-token",
+				Token: flowy.GetHeaderAuthorization(c),
+				UserRequestInfo: &UserRequestInfo{
+					Id:   "1",
+					Role: "ADM",
+					IP:   "192.168.1.1",
+				},
 			}, nil
-		},
-		OnAfter: func(c flowy.WebCtx, requestOption *RequestOption) error {
-			log.Println("OnAfter")
-			return nil
 		},
 	})
 }
 
 type UploadRequest struct {
-	Name  string                `form:"name"`
-	File1 *multipart.FileHeader `form:"file1" validate:"allow-file-extensions=.go1,allow-file-mime-types=text/plain:text/plain2"`
-	File2 *multipart.FileHeader `form:"file2"`
+	UserRequestInfo *UserRequestInfo      `json:"-"`
+	Name            string                `form:"name"`
+	File1           *multipart.FileHeader `form:"file1" validate:"allow-file-extensions=.go,allow-file-mime-types=text/plain:text/plain2"`
+	File2           *multipart.FileHeader `form:"file2"`
 }
 
 type SimpleRequest struct {
-	Name string `json:"name"`
+	UserRequestInfo *UserRequestInfo `json:"-"`
+	Name            string           `json:"name"`
 }

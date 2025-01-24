@@ -40,11 +40,10 @@ type apiHandler[WCtx WebCtx, RequestInfo any, RequestOption any] struct {
 }
 
 type ApiHandlerOptions[WCtx WebCtx, RequestInfo any, RequestOption any] struct {
-	RequestValidator RequestValidator
-	OnValidate       func(c WCtx, requestOption *RequestOption, data any) error
-	OnBefore         func(c WCtx, requestOption *RequestOption) error
-	GetRequestInfo   func(c WCtx, requestOption *RequestOption) (*RequestInfo, error)
-	OnAfter          func(c WCtx, requestOption *RequestOption) error
+	GetRequestInfo func(c WCtx, requestOption *RequestOption) (*RequestInfo, error)
+	OnBefore       func(c WCtx, requestOption *RequestOption) error
+	OnValidate     func(c WCtx, requestOption *RequestOption, data any) error
+	OnAfter        func(c WCtx, requestOption *RequestOption) error
 }
 
 func NewApiHandler[WCtx WebCtx, RequestInfo any, RequestOption any](apiResponseHandler ApiResponseHandler[WCtx, RequestOption], options *ApiHandlerOptions[WCtx, RequestInfo, RequestOption]) ApiHandler[WCtx, RequestInfo, RequestOption] {
@@ -127,11 +126,6 @@ func (h *apiHandler[WCtx, RequestInfo, RequestOption]) bodyParserIfRequired(c WC
 	}
 
 	return true, nil
-}
-
-type ResponseData struct {
-	Data interface{}
-	Err  error
 }
 
 type Ctx[RequestInfo any] struct {

@@ -3,7 +3,7 @@ package api_test
 import (
 	"github.com/dreamph/flowy"
 	"github.com/dreamph/flowy/example/api"
-	"github.com/dreamph/flowy/example/fiberx"
+	"github.com/dreamph/flowy/fiberx"
 	"github.com/gofiber/fiber/v2"
 	"io"
 	"net/http"
@@ -12,12 +12,12 @@ import (
 )
 
 func BenchmarkFlowy(b *testing.B) {
-	apiHandler := api.NewNewApiHandler()
+	apiHandler := api.NewApiHandler()
 	app := fiber.New()
 
 	// Define the route
 	app.Get("/", func(c *fiber.Ctx) error {
-		return apiHandler.Do(fiberx.WebCtx(c), nil, nil, func(ctx *flowy.Ctx[api.RequestInfo]) (interface{}, error) {
+		return apiHandler.Do(fiberx.With(c), nil, nil, func(ctx *flowy.Ctx[api.RequestInfo]) (interface{}, error) {
 			return "Hi.", nil
 		})
 	})

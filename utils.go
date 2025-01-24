@@ -20,7 +20,8 @@ const (
 	MIMEOctetStream     = "application/octet-stream"
 	MIMEMultipartForm   = "multipart/form-data"
 
-	HeaderContentType = "Content-Type"
+	HeaderContentType   = "Content-Type"
+	HeaderAuthorization = "Authorization"
 )
 
 var (
@@ -122,4 +123,18 @@ func GetFileMimeType(fileHeader *multipart.FileHeader) (string, error) {
 		return strings.Split(mimeType, ";")[0], nil
 	}
 	return mimeType, nil
+}
+
+func ExtractToken(bearToken string) string {
+	if strings.Contains(bearToken, "Bearer") {
+		strArr := strings.Split(bearToken, " ")
+		if len(strArr) == 2 {
+			return strings.TrimSpace(strArr[1])
+		}
+	}
+	return strings.TrimSpace(bearToken)
+}
+
+func GetHeaderAuthorization(c WebCtx) string {
+	return ExtractToken(c.Get(HeaderAuthorization))
 }

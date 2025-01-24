@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"github.com/dreamph/flowy"
 	"github.com/dreamph/flowy/example/api"
-	"github.com/dreamph/flowy/example/fiberx"
+	"github.com/dreamph/flowy/fiberx"
 	"github.com/gofiber/fiber/v2"
 	"log"
 )
 
 func main() {
-	apiHandler := api.NewNewApiHandler()
+	apiHandler := api.NewApiHandler()
 	app := fiber.New()
 	app.Get("/", func(c *fiber.Ctx) error {
-		return apiHandler.Do(fiberx.WebCtx(c), nil, nil, func(ctx *flowy.Ctx[api.RequestInfo]) (interface{}, error) {
+		return apiHandler.Do(fiberx.With(c), nil, nil, func(ctx *flowy.Ctx[api.RequestInfo]) (interface{}, error) {
 			return "Hi.", nil
 		})
 	})
@@ -22,20 +22,21 @@ func main() {
 		requestOptions := flowy.WithRequestOptions(
 			api.SuccessStatus(201),
 		)
-		return apiHandler.Do(fiberx.WebCtx(c), nil, requestOptions, func(ctx *flowy.Ctx[api.RequestInfo]) (interface{}, error) {
+		return apiHandler.Do(fiberx.With(c), nil, requestOptions, func(ctx *flowy.Ctx[api.RequestInfo]) (interface{}, error) {
 			return "Hi.", nil
 		})
 	})
 
 	app.Get("/error", func(c *fiber.Ctx) error {
-		return apiHandler.Do(fiberx.WebCtx(c), nil, nil, func(ctx *flowy.Ctx[api.RequestInfo]) (interface{}, error) {
+		return apiHandler.Do(fiberx.With(c), nil, nil, func(ctx *flowy.Ctx[api.RequestInfo]) (interface{}, error) {
 			return nil, &api.AppError{ErrCode: "0001", ErrMessage: "Error"}
 		})
 	})
 
 	app.Post("/simple", func(c *fiber.Ctx) error {
 		request := &api.SimpleRequest{}
-		return apiHandler.Do(fiberx.WebCtx(c), request, nil, func(ctx *flowy.Ctx[api.RequestInfo]) (interface{}, error) {
+		return apiHandler.Do(fiberx.With(c), request, nil, func(ctx *flowy.Ctx[api.RequestInfo]) (interface{}, error) {
+			request.UserRequestInfo = ctx.RequestInfo.UserRequestInfo
 			fmt.Println(request.Name)
 			return request.Name, nil
 		})
@@ -46,7 +47,8 @@ func main() {
 		requestOptions := flowy.WithRequestOptions(
 			api.EnableValidate(true),
 		)
-		return apiHandler.Do(fiberx.WebCtx(c), request, requestOptions, func(ctx *flowy.Ctx[api.RequestInfo]) (interface{}, error) {
+		return apiHandler.Do(fiberx.With(c), request, requestOptions, func(ctx *flowy.Ctx[api.RequestInfo]) (interface{}, error) {
+			request.UserRequestInfo = ctx.RequestInfo.UserRequestInfo
 			fmt.Println("name:", request.Name)
 			fmt.Println("file1:", request.File1.Filename)
 			fmt.Println("file2:", request.File2.Filename)
