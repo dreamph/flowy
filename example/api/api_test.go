@@ -1,14 +1,15 @@
 package api_test
 
 import (
-	"github.com/dreamph/flowy"
-	"github.com/dreamph/flowy/example/api"
-	"github.com/dreamph/flowy/fiberx"
-	"github.com/gofiber/fiber/v2"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/dreamph/flowy"
+	"github.com/dreamph/flowy/example/api"
+	"github.com/dreamph/flowy/fiberx"
+	"github.com/gofiber/fiber/v2"
 )
 
 func BenchmarkFlowy(b *testing.B) {

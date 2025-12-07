@@ -1,13 +1,14 @@
 package api
 
 import (
-	"github.com/dreamph/flowy"
-	errs "github.com/pkg/errors"
 	"io"
 	"log"
 	"mime/multipart"
 	"net/http"
 	"time"
+
+	"github.com/dreamph/flowy"
+	errs "github.com/pkg/errors"
 )
 
 type UserRequestInfo struct {

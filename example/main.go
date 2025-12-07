@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/dreamph/flowy"
 	"github.com/dreamph/flowy/example/api"
 	"github.com/dreamph/flowy/fiberx"
 	"github.com/gofiber/fiber/v2"
-	"log"
 )
 
 func main() {
